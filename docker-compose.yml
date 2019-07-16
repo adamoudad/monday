@@ -1,0 +1,11 @@
+version: '2.3'
+services:
+  jupyter:
+    image: considerate/nak-learn
+    runtime: nvidia
+    ports: ['8888:8888']
+    volumes:
+      - './notebooks/:/notebooks'
+      - '.:/code'
+    command: jupyter notebook --notebook-dir='/notebooks'
+
