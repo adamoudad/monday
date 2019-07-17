@@ -6,7 +6,8 @@ from keras.datasets import mnist
 
 # Normalize data
 def normalize_samples(samples):
-    return np.expand_dims( samples.astype('float') / 255. , axis=-1)
+    samples = np.reshape(samples, [-1, 28*28])
+    return samples.astype('float') / 255. # np.expand_dims( samples.astype('float') / 255. , axis=-1)
 
 train_samples = normalize_samples(train_samples)
 test_samples = normalize_samples(test_samples)
@@ -27,8 +28,8 @@ def sampling(args):
 latent_dimension = 20
 
 inputs = Input(shape=input_shape, name='encoder_input')
-x = Flatten()(inputs)
-x = Dense(512, activation='relu')(x)
+# x = Flatten()(inputs)
+x = Dense(512, activation='relu')(inputs)
 z_mean = Dense(latent_dimension, name='z_mean')(x)
 z_log_var = Dense(latent_dimension, name='z_log_var')(x)
 z = Lambda(sampling, output_shape=(latent_dimension,), name='z')([z_mean, z_log_var])
@@ -38,7 +39,7 @@ encoder = Model(inputs, [z_mean, z_log_var, z], name='encoder')
 latent_inputs = Input(shape=(latent_dimension,), name='z_sampling')
 x = Dense(512, activation='relu')(latent_inputs)
 outputs = Dense(np.product(input_shape), activation='sigmoid')(x)
-outputs = Reshape(input_shape)(outputs)
+# outputs = Reshape(input_shape)(outputs)
 
 decoder = Model(latent_inputs, outputs, name='decoder')
 
@@ -47,13 +48,22 @@ vae = Model(inputs, outputs, name='vae_mlp')
 
 from keras.losses import binary_crossentropy
 
-reconstruction_loss = binary_crossentropy(inputs, outputs)
-reconstruction_loss *= np.product(input_shape)
+def weighted_binary_crossentropy(y_true, y_pred, alpha):
+    return - K.sum(y_true * K.log(y_pred + K.epsilon()) + alpha * (1 - y_true) * K.log((1 - y_pred) + K.epsilon()), axis=-1)
+
+reconstruction_loss = weighted_binary_crossentropy(inputs, outputs, alpha=7.653423808927225)
+# reconstruction_loss = binary_crossentropy(inputs, outputs)
+# reconstruction_loss *= 28*28
 kl_loss = 1 + z_log_var - K.square(z_mean) - K.exp(z_log_var)
 kl_loss = -0.5 * K.sum(kl_loss, axis=-1)
 vae_loss = K.mean(reconstruction_loss + kl_loss)
 vae.add_loss(vae_loss)
 vae.compile(optimizer='adam')
+vae.metrics_names.append('KL')
+vae.metrics_tensors.append(K.mean(kl_loss))
+vae.metrics_names.append('Rec')
+vae.metrics_tensors.append(K.mean(reconstruction_loss))
+
 # model.add(Conv2D(32, 3, padding='same', activation='relu', input_shape=(28, 28, 1)))
 # model.add(Conv2D(64, 3, padding='same', activation='relu'))
 # model.add(Dense(32, activation='relu'))
