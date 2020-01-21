@@ -1,28 +1,17 @@
-(setq l (list 1 4 6 2 0 5))
-(print l)
-(terpri)
-(setq sl (car l))
-(setq lt (cdr l))
-(select-sort sl lt)
-;; 
-(if (null (list "cool"))
-    sl
-    ())
-    ;; else if (equalp nil nil)
-    ;; (print "good job"))
-
 (defun insert-sort-list (e l)
   (if (null l)
       (list e)
       (if (> e (car l))
 	  (cons (car l) (insert-sort-list e (cdr l) ))
 	  (cons e l))))
+
 (defun select-sort (l sl)
   (if (null l)
       sl
       (if (listp l)
 	  (select-sort (cdr l) (insert-sort-list (car l) sl))
 	  (select-sort nil l))))
+
 (defun bubble-sort (l)
   (if (null l)
       l
@@ -32,9 +21,8 @@
 		(if (< head (car tail))
 		    (cons head (bubble-sort tail))))))))
 
-(select-sort '(3 6 1 2 7 4 2 6 35 2) nil)
-(select-sort 5 nil)
-(select-sort nil  nil)
-(insert-sort 5 '(1 1 2 4 8 9))
-(list (car '(5 5 65 3)))
-(list '(4 2 6))
+(let ((l '(3 6 1 2 7 4 2 6 35 2)))
+  (select-sort l nil)
+  ;; (bubble-sort l)
+  )
+
