@@ -6,11 +6,10 @@
 	  (cons e l))))
 
 (defun select-sort (l sl)
-  (if (null l)
-      sl
-      (if (listp l)
-	  (select-sort (cdr l) (insert-sort-list (car l) sl))
-	  (select-sort nil l))))
+  (cond ((null l) sl)
+	((listp l)
+	 (select-sort (cdr l) (insert-sort-list (car l) sl)))
+	(t (select-sort nil l))))
 
 (defun bubble-sort (l)
   (if (null l)
